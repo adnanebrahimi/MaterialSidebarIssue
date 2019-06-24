@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, filter } from 'rxjs/operators';
+import { Router, NavigationStart } from '@angular/router';
+import { MatDrawerContainer } from '@angular/material';
 
 @Component({
   selector: 'app-sidebar-layout',
@@ -10,11 +12,30 @@ import { map } from 'rxjs/operators';
 })
 export class SidebarLayoutComponent {
 
+  isHandset = false;
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
-      map(result => result.matches)
+      map(result => {
+        if (result.matches) {
+          this.isHandset = true;
+          return true;
+        } else {
+          this.isHandset = false;
+          return false;
+        }
+      })
     );
+  @ViewChild('drawer', { static: true }) drawer: MatDrawerContainer;
 
-  constructor(private breakpointObserver: BreakpointObserver) {}
+  constructor(private breakpointObserver: BreakpointObserver, private router: Router) {
+    this.router.events.pipe(filter(event => event instanceof NavigationStart))
+      .subscribe((event: NavigationStart) => {
+        if (this.isHandset) {
+          this.drawer.close();
+          console.log('closed');
+        }
+      });
+
+  }
 
 }
